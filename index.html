@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>IdirisAlteeso Invoice</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+  <style>
+    :root {
+      --primary-blue: #004280;
+      --header-gradient-start: #005bb5;
+      --header-gradient-end: #002e5d;
+      --text-dark: #000000;
+      --text-gray: #222222;
+      --border-color: #ccc;
+      --white: #fff;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: #f0f0f0;
+      color: var(--text-dark);
+      padding: 20px;
+    }
+
+    .invoice-container {
+      max-width: 500px;
+      margin: 0 auto;
+      background: white;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+      position: relative;
+      overflow: hidden;
+      min-height: auto;
+      padding-bottom: 12px;
+    }
+
+    /* ACTIONS (Hide in Print/PDF) */
+    .actions {
+      max-width: 500px;
+      margin: 15px auto 0;
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      font-size: 11px;
+    }
+
+    .btn-download {
+      background: var(--primary-blue);
+      color: white;
+    }
+
+    .btn-print {
+      background: #4caf50;
+      color: white;
+    }
+
+    .btn-clear {
+      background: #e0e0e0;
+      color: #000;
+    }
+
+    @media print {
+      body {
+        margin: 0;
+        padding: 0;
+        background: white;
+      }
+
+      .actions {
+        display: none !important;
+      }
+
+      .invoice-container {
+        box-shadow: none;
+        margin: 0;
+        max-width: none;
+        width: 100%;
+        padding: 0;
+        zoom: 1.6;
+        /* Accurate A4 scaling */
+      }
+    }
+
+    /* HEADER */
+    .header {
+      background: linear-gradient(135deg, #005bb5 0%, #002e5d 100%);
+      height: 100px;
+      position: relative;
+      color: white;
+      padding: 20px 25px;
+    }
+
+    .header h1 {
+      font-size: 24px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin: 0;
+    }
+
+    /* WAVE SVG */
+    .header-wave {
+      position: absolute;
+      bottom: -1px;
+      left: 0;
+      width: 100%;
+      line-height: 0;
+      direction: ltr;
+    }
+
+    .header-wave svg {
+      width: 100%;
+      height: 35px;
+      display: block;
+      fill: white;
+    }
+
+    /* INFO SECTION */
+    .info-section {
+      padding: 14px 25px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+    }
+
+    .bill-to h3,
+    .from-section h3 {
+      font-size: 13px;
+      color: #000;
+      margin-bottom: 2px;
+      font-weight: 700;
+    }
+
+    .bill-to input,
+    .from-section input {
+      border: none;
+      font-size: 11px;
+      color: #222;
+      width: 100%;
+      padding: 2px 0;
+      outline: none;
+      background: transparent;
+      font-family: inherit;
+    }
+
+    .bill-to .company-name {
+      font-weight: 800;
+      color: #000;
+      text-transform: uppercase;
+      font-size: 11px;
+    }
+
+    .from-section {
+      text-align: right;
+    }
+
+    .from-section h3 {
+      font-size: 11px;
+      color: #222;
+    }
+
+    .from-section .sender-name {
+      font-size: 14px;
+      font-weight: 800;
+      color: #000;
+      text-transform: uppercase;
+      margin-bottom: 2px;
+      display: block;
+      width: 100%;
+      text-align: right;
+    }
+
+    .from-section .date {
+      color: #222;
+      font-size: 11px;
+      text-align: right;
+      font-weight: 600;
+    }
+
+    /* SECTION TITLE */
+    .content-section {
+      padding: 6px 25px 4px;
+    }
+
+    .section-title {
+      font-size: 12px;
+      font-weight: 800;
+      color: #222;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    /* TABLE */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 11px;
+    }
+
+    thead {
+      background-color: #004280;
+      color: white;
+    }
+
+    th {
+      padding: 6px 8px;
+      text-align: left;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+
+    th:nth-child(2),
+    th:nth-child(3) {
+      text-align: center;
+    }
+
+    td {
+      padding: 8px;
+      vertical-align: top;
+      border-right: 1px solid #ddd;
+      color: #000;
+      font-weight: 600;
+    }
+
+    td:last-child {
+      border-right: none;
+    }
+
+    /* Table Inputs */
+    td textarea,
+    td input {
+      width: 100%;
+      border: none;
+      background: transparent;
+      font-family: inherit;
+      font-size: 11px;
+      font-weight: 700;
+      color: #000;
+      outline: none;
+      resize: none;
+    }
+
+    td:nth-child(2) input,
+    td:nth-child(3) input {
+      text-align: center;
+    }
+
+    .row-separator {
+      border-bottom: 1px solid #ddd;
+    }
+
+    /* Table Column Widths */
+    th:nth-child(1) {
+      width: 50%;
+    }
+
+    th:nth-child(2) {
+      width: 25%;
+    }
+
+    th:nth-child(3) {
+      width: 25%;
+    }
+
+    /* Row height: fit content only (no extra white space) */
+    .item-row td {
+      min-height: 0;
+      height: auto;
+      padding: 10px 8px;
+    }
+
+    /* SUBTOTAL */
+    .subtotal-container {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0;
+    }
+
+    .subtotal-box {
+      background-color: #004280;
+      color: white;
+      display: flex;
+      width: 50%;
+      margin-left: auto;
+    }
+
+    .subtotal-label {
+      padding: 6px 8px;
+      flex: 1;
+      text-align: right;
+      font-weight: 600;
+      font-size: 11px;
+    }
+
+    .subtotal-value {
+      padding: 6px 12px;
+      font-weight: 700;
+      font-size: 13px;
+      background: #00366b;
+      min-width: 90px;
+      text-align: right;
+    }
+
+    /* FOOTER */
+    .footer {
+      padding: 8px 25px 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-top: 12px;
+    }
+
+    .payment-info label {
+      display: block;
+      font-weight: 700;
+      color: #000;
+      margin-bottom: 2px;
+      font-size: 11px;
+    }
+
+    .payment-info input {
+      border: none;
+      color: #222;
+      font-weight: 600;
+      font-size: 11px;
+      width: 200px;
+      outline: none;
+      background: transparent;
+    }
+
+    .thank-you {
+      font-size: 18px;
+      color: #004280;
+      font-weight: 700;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="invoice-container" id="invoice">
+    <!-- Header with Wave -->
+    <div class="header">
+      <h1>INVOICE</h1>
+      <div class="header-wave">
+        <!-- Concave wave SVG -->
+        <svg viewBox="0 0 1440 320" preserveAspectRatio="none">
+          <path fill="#ffffff" fill-opacity="1"
+            d="M0,224L80,213.3C160,203,320,181,480,181.3C640,181,800,203,960,213.3C1120,224,1280,224,1360,224L1440,224L1440,320L1360,320C1280,320,1120,320,960,320C800,320,640,320,480,320C320,320,160,320,80,320L0,320Z">
+          </path>
+        </svg>
+      </div>
+    </div>
+
+    <!-- Bill To / From -->
+    <div class="info-section">
+      <div class="bill-to">
+        <h3>Bill To:</h3>
+        <input type="text" class="company-name" value="DAHABSHIIL GROUP">
+        <input type="text" value="MOGADISHU-SOMALIA">
+      </div>
+      <div class="from-section">
+        <h3>From:</h3>
+        <input type="text" class="sender-name" value="IDIRIS ALTEESO">
+        <input type="text" id="invoiceDate" class="date">
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div class="content-section">
+      <div class="section-title">CODSI QEYB KAMID AH LACAGTA HESHIISKA</div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>Description</th>
+            <th>Price</th>
+            <th>Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr class="item-row">
+            <td>
+              <textarea id="desc1">HESHIIS FULIN ADEEG (
+CONTRACT SERVICE)</textarea>
+            </td>
+            <td>
+              <input type="text" id="price1" value="0%">
+            </td>
+            <td>
+              <input type="text" id="total1" value="$0">
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="subtotal-container">
+        <div class="subtotal-box">
+          <div class="subtotal-label">Sub Total</div>
+          <div class="subtotal-value" id="subtotalDisplay">$0</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+      <div class="payment-info">
+        <label>Payment Information:</label>
+        <input type="text" value="WalletEdahab: 624325490">
+      </div>
+      <div class="thank-you">
+        Thank You!
+      </div>
+    </div>
+  </div>
+
+  <!-- Actions -->
+  <div class="actions">
+    <button class="btn btn-download" onclick="downloadPDF()">Save PDF</button>
+    <button class="btn btn-print" onclick="window.print()">Print</button>
+    <button class="btn btn-clear" onclick="window.location.reload()">Reset</button>
+  </div>
+
+  <script>
+    // Set current date
+    const dateInput = document.getElementById('invoiceDate');
+    const today = new Date();
+    const day = today.getDate();
+    const month = today.toLocaleString('default', {
+      month: 'long'
+    });
+    const year = today.getFullYear();
+    dateInput.value = `Date: ${day}-${month}-${year}`;
+
+    // Sync Total and Subtotal
+    const totalInput = document.getElementById('total1');
+    const subtotalDisplay = document.getElementById('subtotalDisplay');
+
+    document.getElementById('price1').value = '0%';
+    document.getElementById('total1').value = '$0';
+    document.getElementById('subtotalDisplay').textContent = '$0';
+
+    if (totalInput && subtotalDisplay) {
+      totalInput.addEventListener('input', function () {
+        subtotalDisplay.textContent = this.value || '$0';
+      });
+    }
+
+    function downloadPDF() {
+      const element = document.getElementById('invoice');
+      const originalZoom = element.style.zoom;
+      const originalMaxWidth = element.style.maxWidth;
+      const originalPadding = element.style.paddingBottom;
+
+      // Temporary: no zoom so measurement is accurate; minimal bottom padding
+      element.style.zoom = '1';
+      element.style.maxWidth = '500px';
+      element.style.paddingBottom = '0';
+
+      // Use scrollHeight so we capture only real content (no extra white space)
+      const w = element.offsetWidth;
+      const h = element.scrollHeight;
+      // PDF: 210mm width, height = content aspect ratio so page fits exactly
+      const widthMm = 210;
+      const heightMm = Math.ceil((h / w) * widthMm) + 2; // +2mm small margin
+
+      const opt = {
+        margin: 0,
+        filename: 'Idirisalteeso-invoice.pdf',
+        image: { type: 'jpeg', quality: 0.98 },
+        html2canvas: {
+          scale: 2,
+          useCORS: true,
+          scrollY: 0,
+          scrollX: 0,
+          windowHeight: element.scrollHeight
+        },
+        jsPDF: { unit: 'mm', format: [widthMm, heightMm], orientation: 'portrait' }
+      };
+
+      html2pdf().set(opt).from(element).save().then(() => {
+        element.style.zoom = originalZoom || '';
+        element.style.maxWidth = originalMaxWidth || '';
+        element.style.paddingBottom = originalPadding || '';
+y      });
+    }
+  </script>
+</body>
+
+</html>
